@@ -3,6 +3,7 @@
     "server": "0.0.0.0",
     "nick": "Benny",
     "port": "64738",
+    "certfile": "",
     "stereo": false,
     "library": {
         "path": "snd/",
