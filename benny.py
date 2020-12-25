@@ -68,10 +68,10 @@ def cmd_play(msg, a):
     playing = True
     # Change into callback?
     while playing:
-        raw_music = sound.stdout.read(1024)
-        if not raw_music:
+        chunk = sound.stdout.read(1024)
+        if not chunk:
             break
-        mumble.sound_output.add_sound(raw_music)
+        mumble.sound_output.add_sound(chunk)
 
 def cmd_stop(msg, a):
     global playing
@@ -81,14 +81,24 @@ def cmd_stop(msg, a):
     playing = False
     mumble.sound_output.clear_buffer()
 
+# Take our directory listing and break it into
+# chunks of 50 lines.
+# Return a list of those chunks
+def split_list(l):
+    count = 0
+    strings = []
 
-# List pushing with limit testing
-def list_join(l, elem):
-    # FIXME: list max magic number
-    if len(l) >= 50:
-        return
+    coll = []
+    while count < len(l):
+        coll.append(l[count])
 
-    l.append(elem)
+        if count != 0 and count % 50 == 0:
+            strings.append(coll)
+            coll = []
+
+        count += 1
+
+    return strings
 
 # Print a list of the files in the sound library.
 def cmd_list(msg, a):
@@ -99,19 +109,26 @@ def cmd_list(msg, a):
     l = []
 
     for root, dirs, files, in os.walk(library_path, topdown=True):
-        for name in files:
-            list_join(l, os.path.join(root, name))
+        for name in sorted(files):
+            l.append(os.path.join(root, name))
 
         # NOTE: Not sure that we need to list directory names
         #for name in dirs:
         #    list_join(l, os.path.join(root, name))
 
-    s = "\n"
-    for name in l:
-        s += "<p>" + name + "</p>"
+    messages = split_list(l)
 
-    actor.send_text_message(s)
-    print(l)
+    for elem in messages:
+        chunk = []
+        for string in elem:
+            string = "<p>" + string + "</p>"
+            chunk.append(string)
+
+        s = "\n"
+        for st in chunk:
+            s += st
+
+        actor.send_text_message(s)
 
 
 aliases = {
