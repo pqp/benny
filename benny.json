@@ -4,5 +4,8 @@
     "nick": "Benny",
     "port": "64738",
     "stereo": false,
-    "library": "snd/"
+    "library": {
+        "path": "snd/",
+        "allowed_file_types": [".wav", ".mp3", ".ogg"]
+    }
 }

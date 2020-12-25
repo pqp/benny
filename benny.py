@@ -9,20 +9,16 @@ from os import path
 # Update: exception, error handling
 f = open("benny.json")
 config = json.load(f)
-global playing
 playing = False
-
-def audio_stream_process(data, frame_count, time_info, status):
-    pass
+volume = 1.0
 
 def validate(filename):
     # A filename will have an extension, or it won't.
     # We'll check for both cases.
-    #
 
     # TODO: Iterate through directories, not just the current directory
 
-    file_types = [".wav", ".mp3", ".ogg"]
+    file_types = config.get("library").get("allowed_file_types")
 
     if filename.find(".") != -1:
         if path.exists(filename):
@@ -33,17 +29,34 @@ def validate(filename):
             if path.exists(filename + t):
                 return filename + t
 
+# Send a message into the active channel.
+def channel_message(message):
+    pass
+
+# Play a sound file.
 def cmd_play(a):
     # Check that array is only one element
     # Check that element is a valid filename
     # Play it.
 
-    filename = a.pop()
-    filename = config.get("library") + filename
+    global playing
+    global volume
+
+    if len(a) <= 0:
+        print("empty cmd")
+        return -1
+
+    # If we're already sending audio, stop, then clear the buffer
+    if playing:
+        playing = False
+        mumble.sound_output.clear_buffer()
+
+    filename = a.pop(0)
+    filename = config.get("library").get("path") + filename
     filename = validate(filename)
     print(filename)
 
-    command = ["ffmpeg", "-i", filename, "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
+    command = ["ffmpeg", "-i", filename, "-filter:a", "volume=" + str(volume), "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
     sound = sp.Popen(command, stdout=sp.PIPE, stderr=sp.DEVNULL, bufsize=1024)
 
     playing = True
@@ -54,17 +67,20 @@ def cmd_play(a):
             break
         mumble.sound_output.add_sound(raw_music)
 
-    print(a)
-
 def cmd_stop(a):
+    global playing
+
     # TODO: Print message
+    playing = False
+    mumble.sound_output.clear_buffer()
+
+def cmd_list(a):
     pass
 
 aliases = {
-    'play': cmd_play,
-    'p': cmd_play,
-    'stop': cmd_stop,
-    's': cmd_stop
+    'bp': cmd_play,
+    'bs': cmd_stop,
+    'bl': cmd_list,
 }
 
 def process_command(a):
@@ -72,34 +88,28 @@ def process_command(a):
     # benny + <cmd> + <arg1> + <arg2>, benny stop...
     # or bp <arg1>, bs...
 
-    cmd = a.pop()
+    cmd = a.pop(0)
     print("cmd: " + cmd)
 
-    aliases[cmd](a)
+    found = False
+    for alias in aliases:
+       if cmd == alias:
+           found = True
+           aliases[cmd](a)
 
+    if not found:
+        print("Tried to find command " + cmd + " but couldn't find it")
+
+    return
+
+# TODO: add optional silent flag
 def process_message(msg):
     actor = msg.actor
     channel_id = msg.channel_id
     message = msg.message
 
     a = message.split()
-    a.reverse()
-    call = a.pop()
-
-    # If a user merely calls with 'benny', then
-    # process the command and its arguments.
-    if call == ("benny"):
-        process_command(a)
-    # but if a user uses an abbreviation, then
-    # strip the beginning 'b' and see if the
-    # rest is a command (the user might simply
-    # be using a word that starts with 'b')
-    elif call[0] == 'b':
-        cmd = call.strip('b')
-        a.append(cmd)
-        process_command(a)
-    else:
-        return -1
+    process_command(a)
 
 mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), port=int(config.get("port")))
 mumble.callbacks.set_callback(PCM, process_message)
