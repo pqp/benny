@@ -85,18 +85,19 @@ def cmd_stop(msg, a):
 # chunks of 50 lines.
 # Return a list of those chunks
 def split_list(l):
-    count = 0
     strings = []
 
     coll = []
-    while count < len(l):
-        coll.append(l[count])
-
-        if count != 0 and count % 50 == 0:
-            strings.append(coll)
-            coll = []
+    count = 0
+    for elem in l:
+        coll.append(elem)
 
         count += 1
+
+        if count >= 50:
+            strings.append(coll)
+            coll = []
+            count = 0
 
     return strings
 
@@ -117,6 +118,7 @@ def cmd_list(msg, a):
         #    list_join(l, os.path.join(root, name))
 
     messages = split_list(l)
+    print(messages)
 
     for elem in messages:
         chunk = []
@@ -169,6 +171,11 @@ mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=conf
 mumble.callbacks.set_callback(PCM, process_message)
 mumble.start()
 mumble.is_ready()
+
+channel_name = config.get("channel")
+if channel_name:
+    channel = mumble.channels.find_by_name(channel_name)
+    channel.move_in()
 
 while True:
     pass
