@@ -5,6 +5,7 @@ from pymumble_py3.callbacks import PYMUMBLE_CLBK_TEXTMESSAGERECEIVED as PCM
 import json
 import subprocess as sp
 import os
+import time
 from os import path
 
 # Update: exception, error handling
@@ -178,4 +179,4 @@ if channel_name:
     channel.move_in()
 
 while True:
-    pass
+    time.sleep(1)
