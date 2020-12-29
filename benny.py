@@ -111,7 +111,7 @@ def cmd_list(msg, a):
 
     for root, dirs, files, in os.walk(library_path, topdown=True):
         for name in sorted(files):
-            l.append(os.path.join(root, name))
+            l.append(os.path.join(name))
 
         # NOTE: Not sure that we need to list directory names
         #for name in dirs:
