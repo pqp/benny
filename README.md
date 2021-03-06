@@ -1,10 +1,24 @@
 # Installing
 
-1. Copy the example config for your own use.
+1. Copy the example config into `benny.json` for your own use.
 
 `cp benny_default.json benny.json`
 
-2. Fill it out, add your certfile path, etc.
+2. Fill `benny.json` out, add your certfile path, etc. An example configuration could look like this:
+
+`{
+    "password": "thebestpassword!",
+    "server": "mumbleserver.example.com",
+    "nick": "Benny",
+    "port": "6120",
+    "channel": "Lobby",
+    "certfile": "",
+    "stereo": true,
+    "library": {
+        "path": "snd/",
+        "allowed_file_types": [".wav", ".mp3", ".ogg"]
+    }
+}`
 
 3. Build a docker image.
 
