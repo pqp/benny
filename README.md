@@ -1,4 +1,4 @@
-# Setup instructions
+# Installing
 
 1. Copy the example config for your own use.
 
@@ -10,7 +10,7 @@
 
 `docker build -t benny .`
 
-4. Run the docker image. I recommend using bind mounts to point your sound files into the container. For example,
+4. Launch a container. I recommend using bind mounts to point your sound files into the container. For example,
 
 `docker run -d --restart unless-stopped -v "/home/admin/sound_library/:/app/snd/" benny`
 
