@@ -144,9 +144,14 @@ def cmd_volume(msg, a):
         return
 
     volume = float(a.pop(0))
+
+    if volume < 0:
+        volume = 0
+    if volume > 100:
+        volume = 100
+
     volume = volume / 100
-    pass
-    
+    channel_message("Volume is set to " + str(volume * 100) + ".")
 
 aliases = {
     'bp': cmd_play,
