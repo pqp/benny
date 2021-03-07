@@ -3,6 +3,7 @@
 import pymumble_py3 as pymumble
 from pymumble_py3.callbacks import PYMUMBLE_CLBK_TEXTMESSAGERECEIVED as PCM
 import json
+import audioop
 import subprocess as sp
 import os
 import time
@@ -12,7 +13,7 @@ from os import path
 f = open("benny.json")
 config = json.load(f)
 playing = False
-volume = 1.0
+volume = 0.4
 
 def validate(filename):
     # A filename will have an extension, or it won't.
@@ -45,7 +46,6 @@ def cmd_play(msg, a):
     # Play it.
 
     global playing
-    global volume
 
     if len(a) <= 0:
         print("empty cmd")
@@ -61,7 +61,7 @@ def cmd_play(msg, a):
     filename = validate(filename)
     print(filename)
 
-    command = ["ffmpeg", "-i", filename, "-filter:a", "volume=" + str(volume), "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
+    command = ["ffmpeg", "-i", filename, "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
     sound = sp.Popen(command, stdout=sp.PIPE, stderr=sp.DEVNULL, bufsize=1024)
 
     channel_message("Playing.")
@@ -72,7 +72,10 @@ def cmd_play(msg, a):
         chunk = sound.stdout.read(1024)
         if not chunk:
             break
-        mumble.sound_output.add_sound(chunk)
+        mumble.sound_output.add_sound(audioop.mul(chunk, 2, volume))
+
+        while mumble.sound_output.get_buffer_size() > 0.2:
+            time.sleep(0.01)
 
 def cmd_stop(msg, a):
     global playing
@@ -133,11 +136,23 @@ def cmd_list(msg, a):
 
         actor.send_text_message(s)
 
+def cmd_volume(msg, a):
+    global volume
+
+    if len(a) < 1:
+        channel_message("Volume is set to " + str(volume * 100) + ".")
+        return
+
+    volume = float(a.pop(0))
+    volume = volume / 100
+    pass
+    
 
 aliases = {
     'bp': cmd_play,
     'bs': cmd_stop,
     'bl': cmd_list,
+    'bv': cmd_volume
 }
 
 def process_command(msg, a):
