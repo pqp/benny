@@ -26,11 +26,15 @@ def validate(filename):
     if filename.find(".") != -1:
         if path.exists(filename):
             return filename
+        else:
+            channel_message("Cannot locate " + filename + ".")
     else:
         for t in file_types:
             print(t)
             if path.exists(filename + t):
                 return filename + t
+
+        channel_message("Cannot locate " + filename + " under any of the supported file types.")
 
 def actor_message(actor, message):
     actor.send_text_message(message)
