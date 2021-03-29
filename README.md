@@ -2,11 +2,11 @@
 
 1. Copy the example config into `benny.json` for your own use.
 
-`cp benny_default.json benny.json`
+	`$ cp benny_default.json benny.json`
 
 2. Fill `benny.json` out, add your certfile path, etc. An example configuration could look like this:
-
-	{
+`
+{
     	"password": "thebestpassword!",
     	"server": "mumbleserver.example.com",
     	"nick": "Benny",
@@ -18,14 +18,19 @@
         	"path": "snd/",
         	"allowed_file_types": [".wav", ".mp3", ".ogg"]
     	}
-	}
+}
+`
 
-3. Build a docker image.
+## Docker-compose
 
-`docker build -t benny .`
+3. Use docker-compose to build and launch a container:
 
-4. Launch a container. I recommend using bind mounts to point your sound files into the container. For example,
+	Create a .env file and set the environment variable `SRC`, like this:
 
-`docker run -d --restart unless-stopped -v "/home/admin/sound_library/:/app/snd/" benny`
+	`SRC=/home/user/mylibrary/mp3`
 
-will launch Benny as a daemon, and reroute reading from the container's `snd` directory to `/home/admin/sound_library`.
+	Save it. Then:
+
+4. `$ docker-compose up -d`
+
+	To build and launch a Benny container.
