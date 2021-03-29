@@ -68,6 +68,10 @@ def cmd_play(msg, a):
     command = ["ffmpeg", "-i", filename, "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
     sound = sp.Popen(command, stdout=sp.PIPE, stderr=sp.DEVNULL, bufsize=1024)
 
+    if type(sound) is None:
+        channel_message("Couldn't retrieve " + filename + " from sound library!")
+        return -1
+
     channel_message("Playing.")
 
     playing = True

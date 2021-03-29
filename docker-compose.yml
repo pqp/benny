@@ -1,0 +1,8 @@
+services:
+  benny:
+    build: .
+    volumes:
+      - type: bind
+        source: "${SRC}" # define SRC=<dir> in .env
+        target: /app/snd
+    restart: always
