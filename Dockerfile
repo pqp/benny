@@ -14,4 +14,4 @@ RUN python3 -m venv venv \
     && venv/bin/python3 -m pip install wheel \
     && venv/bin/python3 -m pip install -r requirements.txt
 
-CMD venv/bin/python3 /app/benny.py
+ENTRYPOINT venv/bin/python3 /app/benny.py

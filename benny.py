@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import pymumble_py3 as pymumble
-from pymumble_py3.callbacks import PYMUMBLE_CLBK_TEXTMESSAGERECEIVED as PCM
+from pymumble_py3.callbacks import *
 import json
 import audioop
 import subprocess as sp
@@ -13,6 +13,7 @@ from os import path
 f = open("benny.json")
 config = json.load(f)
 playing = False
+running = True
 volume = 0.4
 
 def validate(filename):
@@ -35,6 +36,7 @@ def validate(filename):
                 return filename + t
 
         channel_message("Cannot locate " + filename + " under any of the supported file types.")
+        return -1
 
 def actor_message(actor, message):
     actor.send_text_message(message)
@@ -63,6 +65,9 @@ def cmd_play(msg, a):
     filename = a.pop(0)
     filename = config.get("library").get("path") + filename
     filename = validate(filename)
+    if filename == -1:
+        return
+
     print(filename)
 
     command = ["ffmpeg", "-i", filename, "-acodec", "pcm_s16le", "-f", "s16le", "-ab", "192k", "-ac", "1", "-ar", "48000", "-"]
@@ -196,8 +201,20 @@ def process_message(msg):
     a = message.split()
     process_command(msg, a)
 
-mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), port=int(config.get("port")))
-mumble.callbacks.set_callback(PCM, process_message)
+def connect_check():
+    print("PYMUMBLE_CLBK_CONNECTED: pass")
+
+def disconnect_check():
+    global running
+
+    print("PYMUMBLE_CLBK_DISCONNECTED: pass")
+    print("Client has disconnected. Exiting...")
+    running = False
+
+mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), certfile=config.get("certfile"), port=int(config.get("port")))
+mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, process_message)
+mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, connect_check)
+mumble.callbacks.set_callback(PYMUMBLE_CLBK_DISCONNECTED, disconnect_check)
 mumble.start()
 mumble.is_ready()
 
@@ -206,5 +223,5 @@ if channel_name:
     channel = mumble.channels.find_by_name(channel_name)
     channel.move_in()
 
-while True:
+while running:
     time.sleep(1)

@@ -5,4 +5,5 @@ services:
       - type: bind
         source: "${SRC}" # define SRC=<dir> in .env
         target: /app/snd
+    tty: true
     restart: always
