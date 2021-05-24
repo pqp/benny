@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import pymumble_py3 as pymumble
-from pymumble_py3.callbacks import *
 import json
 import audioop
 import subprocess as sp
@@ -12,6 +11,8 @@ from os import path
 # Update: exception, error handling
 f = open("benny.json")
 config = json.load(f)
+idle_min = float(config.get("idle_min"))
+user_idle_data = {}
 playing = False
 running = True
 volume = 0.4
@@ -166,6 +167,46 @@ def cmd_volume(msg, a):
     volume = volume / 100
     channel_message("Volume is set to " + str(volume * 100) + ".")
 
+def probe_users():
+    users = mumble.users
+    current_channel = users.myself['channel_id']
+    channel = mumble.channels.find_by_name(config.get("away_channel"))
+    idle_ignore_names = config.get("idle_ignore_names")
+    current_time = time.time()
+
+    idle_data_tmp = user_idle_data.copy()
+
+    for key in idle_data_tmp.keys():
+        if key not in users.keys():
+            if key in user_idle_data:
+                del user_idle_data[key]
+
+    for i in users:
+        user = users[i]
+
+        # don't move the bot itself
+        if user == users.myself:
+            continue
+
+        # don't move anyone not in the bot's current channel
+        if current_channel != user['channel_id']:
+            if i in user_idle_data:
+                del user_idle_data[i]
+            continue
+
+        if user['name'] in idle_ignore_names:
+            continue
+
+        if i not in user_idle_data:
+            user_idle_data[i] = current_time
+            continue
+
+        if current_time - user_idle_data[i] >= idle_min * 60:
+            if i in user_idle_data:
+                del user_idle_data[i]
+
+            channel.move_in(user['session'])
+
 aliases = {
     'bp': cmd_play,
     'bs': cmd_stop,
@@ -211,10 +252,16 @@ def disconnect_check():
     print("Client has disconnected. Exiting...")
     running = False
 
+def voice_check(user, sound):
+    #print("User " + str(user['session']) + " last time is: " + str(sound.time))
+    user_idle_data[user['session']] = sound.time
+
 mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), certfile=config.get("certfile"), port=int(config.get("port")))
-mumble.callbacks.set_callback(PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, process_message)
-mumble.callbacks.set_callback(PYMUMBLE_CLBK_CONNECTED, connect_check)
-mumble.callbacks.set_callback(PYMUMBLE_CLBK_DISCONNECTED, disconnect_check)
+mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, process_message)
+mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_CONNECTED, connect_check)
+mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_DISCONNECTED, disconnect_check)
+mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_SOUNDRECEIVED, voice_check)
+mumble.set_receive_sound(True)
 mumble.start()
 mumble.is_ready()
 
@@ -224,4 +271,5 @@ if channel_name:
     channel.move_in()
 
 while running:
+    probe_users()
     time.sleep(1)

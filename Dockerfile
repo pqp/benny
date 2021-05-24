@@ -1,5 +1,5 @@
 #FROM ubuntu:20.04
-FROM python:3.8-slim-buster
+FROM python:3-slim
 
 RUN apt update \
     && apt -y install python3 python3-venv libopus0 ffmpeg
