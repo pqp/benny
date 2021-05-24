@@ -5,6 +5,9 @@
     "port": "6120",
     "channel": "Lobby",
     "certfile": "",
+    "away_channel": "Away",
+    "idle_min": "60",
+    "idle_ignore_names": ["OtherBot"],
     "stereo": true,
     "library": {
         "path": "snd/",
