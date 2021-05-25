@@ -159,12 +159,10 @@ def cmd_volume(msg, a):
 
     volume = float(a.pop(0))
 
-    if volume < 0:
-        volume = 0
-    if volume > 100:
-        volume = 100
-
+    # clamp volume
+    volume = max(0, min(volume, 100))
     volume = volume / 100
+
     channel_message("Volume is set to " + str(volume * 100) + ".")
 
 def probe_users():
@@ -176,6 +174,7 @@ def probe_users():
 
     idle_data_tmp = user_idle_data.copy()
 
+    # prune absent users from user_idle_data
     for key in idle_data_tmp.keys():
         if key not in users.keys():
             if key in user_idle_data:
@@ -194,13 +193,16 @@ def probe_users():
                 del user_idle_data[i]
             continue
 
+        # don't move a user who is in the ignore list
         if user['name'] in idle_ignore_names:
             continue
 
+        # if we have a new user, add them to our timer dict
         if i not in user_idle_data:
             user_idle_data[i] = current_time
             continue
 
+        # check to see if the time elapsed since this user last spoke is past idle_min
         if current_time - user_idle_data[i] >= idle_min * 60:
             if i in user_idle_data:
                 del user_idle_data[i]
@@ -253,7 +255,7 @@ def disconnect_check():
     running = False
 
 def voice_check(user, sound):
-    #print("User " + str(user['session']) + " last time is: " + str(sound.time))
+    # a user has spoken, so reset their idle timer
     user_idle_data[user['session']] = sound.time
 
 mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), certfile=config.get("certfile"), port=int(config.get("port")))
