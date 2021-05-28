@@ -166,6 +166,8 @@ def cmd_volume(msg, a):
     channel_message("Volume is set to " + str(volume * 100) + ".")
 
 def probe_users():
+    global user_idle_data
+
     users = mumble.users
     current_channel = users.myself['channel_id']
     channel = mumble.channels.find_by_name(config.get("away_channel"))
@@ -177,8 +179,8 @@ def probe_users():
     # prune absent users from user_idle_data
     for key in idle_data_tmp.keys():
         if key not in users.keys():
-            if key in user_idle_data:
-                del user_idle_data[key]
+            if key in idle_data_tmp:
+                del idle_data_tmp[key]
 
     for i in users:
         user = users[i]
@@ -189,8 +191,8 @@ def probe_users():
 
         # don't move anyone not in the bot's current channel
         if current_channel != user['channel_id']:
-            if i in user_idle_data:
-                del user_idle_data[i]
+            if i in idle_data_tmp:
+                del idle_data_tmp[i]
             continue
 
         # don't move a user who is in the ignore list
@@ -198,16 +200,18 @@ def probe_users():
             continue
 
         # if we have a new user, add them to our timer dict
-        if i not in user_idle_data:
-            user_idle_data[i] = current_time
+        if i not in idle_data_tmp:
+            idle_data_tmp[i] = current_time
             continue
 
         # check to see if the time elapsed since this user last spoke is past idle_min
-        if current_time - user_idle_data[i] >= idle_min * 60:
-            if i in user_idle_data:
-                del user_idle_data[i]
+        if current_time - idle_data_tmp[i] >= idle_min * 60:
+            if i in idle_data_tmp:
+                del idle_data_tmp[i]
 
             channel.move_in(user['session'])
+
+    user_idle_data = idle_data_tmp.copy()
 
 aliases = {
     'bp': cmd_play,
