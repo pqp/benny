@@ -177,10 +177,13 @@ def probe_users():
     idle_data_tmp = user_idle_data.copy()
 
     # prune absent users from user_idle_data
+    bad_keys = []
     for key in idle_data_tmp.keys():
         if key not in users.keys():
-            if key in idle_data_tmp:
-                del idle_data_tmp[key]
+            bad_keys.append(key)
+
+    for key in bad_keys:
+        del idle_data_tmp[key]
 
     for i in users:
         user = users[i]
