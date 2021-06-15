@@ -265,7 +265,7 @@ def voice_check(user, sound):
     # a user has spoken, so reset their idle timer
     user_idle_data[user['session']] = sound.time
 
-mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), certfile=config.get("certfile"), port=int(config.get("port")))
+mumble = pymumble.Mumble(config.get("server"), config.get("nick"), password=config.get("password"), certfile=config.get("certfile"), port=int(config.get("port")), reconnect=True)
 mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, process_message)
 mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_CONNECTED, connect_check)
 mumble.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_DISCONNECTED, disconnect_check)
@@ -280,5 +280,5 @@ if channel_name:
     channel.move_in()
 
 while running:
-    probe_users()
+    #probe_users()
     time.sleep(1)
